@@ -2,6 +2,7 @@ package com.hangzhou.novaldev.util;
 
 import com.hangzhou.novaldev.model.ChapterListBean;
 import com.hangzhou.novaldev.model.ChapterListDeatilBean;
+import com.hangzhou.novaldev.model.RankList;
 import com.hangzhou.novaldev.model.SearchBean;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,10 +27,30 @@ public class Api {
 //    @Value("${API-BQG-SEARCH}")
 //    private String apiBqgSearch;
 
+    public static final String[] UA = {"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36 OPR/37.0.2178.32",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/534.57.2 (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586",
+            "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko",
+            "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)",
+            "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)",
+            "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0)",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 BIDUBrowser/8.3 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36 Core/1.47.277.400 QQBrowser/9.4.7658.400",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 UBrowser/5.6.12150.8 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36 SE 2.X MetaSr 1.0",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36 TheWorld 7",
+            "Mozilla/5.0 (Windows NT 6.1; W…) Gecko/20100101 Firefox/60.0"};
+
     @GetMapping("/search")
     public Map search(@RequestParam("keyword") String keyword) {
         try {
-            Document search  = Jsoup.connect("https://so.biqusoso.com/s.php?ie=utf-8&siteid=biqugexsw.com&q="+ keyword).get();
+            Random r = new Random();
+            int k = r.nextInt(14);
+            Document search  = Jsoup.connect("https://so.biqusoso.com/s.php?ie=utf-8&siteid=biqugexsw.com&q="+ keyword)
+                    .userAgent(UA[k])
+                    .get();
             Elements elements = search.select("#search-main > div.search-list > ul>li");
             Map<String,Object> map=new HashMap<>();
             List<SearchBean> list =new ArrayList<>();
@@ -109,6 +130,37 @@ public class Api {
             list.add(cldb);
             map.put("ok",true);
             map.put("chapter",list);
+            System.out.println(JSON.toJSONString(map));
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+    //获取小说排行榜
+    @Test
+    public void rankCategory(){
+        try{
+            Map<String,Object> map=new HashMap<>();
+
+            Document rankCategoryUrl=Jsoup.connect("https://www.biqugexsw.com/paihangbang").get();
+            List<Element> wrap_rank = rankCategoryUrl.getElementsByClass("wrap rank").get(0).children();
+            List listOne=new ArrayList<>();
+            for(Element element:wrap_rank){
+                Elements elements=element.children();
+                RankList rl=new RankList();
+                Map<String,Object> mapList=new HashMap<>();
+                List<RankList> list=new ArrayList<>();
+//                rl.setTitle(elements.get(i).select("h2").text());
+                mapList.put("cat","1");
+                for(int i=0;i<elements.size();i++){
+                    rl.setTitle(elements.get(i).select("ul>li").get(i).text());
+                    rl.setLink(elements.get(i).select("ul>li").get(i).select("a").attr("href"));
+                    list.add(rl);
+                }
+                mapList.put("list",list);
+            }
+//            map.put("1",mapList);
             System.out.println(JSON.toJSONString(map));
         }catch(Exception e){
             e.printStackTrace();
