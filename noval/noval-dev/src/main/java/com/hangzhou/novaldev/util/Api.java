@@ -91,35 +91,36 @@ public class Api {
 
     //获取书籍章节列表
     @GetMapping("/chapterList")
-    public void chapterList(){
-        //body > div.listmain > dl > dd:nth-child(12)
-        try{
-            Map<String,Object> map=new HashMap<>();
-            List<ChapterListBean> list=new ArrayList<>();
-            map.put("_id","41047");
-            map.put("name","笔趣阁");
-            Document listUrl=Jsoup.connect("http://www.biqugexsw.com/book/goto/id/41047").get();
+    public Map chapterList(@RequestParam("bookId") String bookId) {
+        try {
+            Map<String, Object> map = new HashMap<>();
+            List<ChapterListBean> list = new ArrayList<>();
+            map.put("_id", bookId);
+            map.put("name", "笔趣阁");
+            Document listUrl = Jsoup.connect("http://www.biqugexsw.com/book/goto/id/" + bookId).get();
             Elements elements = listUrl.select("body > div.listmain > dl > dt:nth-child(11)").nextAll();
-            for(Element element:elements){
-                ChapterListBean clb=new ChapterListBean();
+            for (Element element : elements) {
+                ChapterListBean clb = new ChapterListBean();
                 clb.setTitle(element.text());
-                clb.setLink("http://www.biqugexsw.com"+element.select("a").attr("href"));
-                clb.setId("41047");
+                clb.setLink("http://www.biqugexsw.com" + element.select("a").attr("href"));
+                clb.setId(bookId);
                 list.add(clb);
             }
-            map.put("chapters",list);
+            map.put("chapters", list);
             System.out.println(JSON.toJSONString(map));
-        }catch(Exception e){
+            return map;
+        } catch (IOException e) {
             e.printStackTrace();
         }
+        return new HashMap<>();
     }
 
 
     //获取书籍章节内容
     @GetMapping("/chapterDetail")
-    public void chapterDetail(String url){
+    public Map chapterDetail(@RequestParam("link") String link){
         try{
-            Document chapterDetailUrl=Jsoup.connect("https://www.biqugexsw.com/41_41047/7474539.html").get();
+            Document chapterDetailUrl=Jsoup.connect(link).get();
             Elements elements=chapterDetailUrl.select("#content");
             Map<String,Object> map=new HashMap<>();
             List<ChapterListDeatilBean> list=new ArrayList<>();
@@ -131,40 +132,41 @@ public class Api {
             map.put("ok",true);
             map.put("chapter",list);
             System.out.println(JSON.toJSONString(map));
-        }catch(Exception e){
+            return map;
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
+        return new HashMap<>();
     }
 
     //获取小说排行榜
-    @Test
-    public void rankCategory(){
-        try{
-            Map<String,Object> map=new HashMap<>();
-
-            Document rankCategoryUrl=Jsoup.connect("https://www.biqugexsw.com/paihangbang").get();
-            List<Element> wrap_rank = rankCategoryUrl.getElementsByClass("wrap rank").get(0).children();
-            List listOne=new ArrayList<>();
-            for(Element element:wrap_rank){
-                Elements elements=element.children();
-                RankList rl=new RankList();
-                Map<String,Object> mapList=new HashMap<>();
-                List<RankList> list=new ArrayList<>();
-//                rl.setTitle(elements.get(i).select("h2").text());
-                mapList.put("cat","1");
-                for(int i=0;i<elements.size();i++){
-                    rl.setTitle(elements.get(i).select("ul>li").get(i).text());
-                    rl.setLink(elements.get(i).select("ul>li").get(i).select("a").attr("href"));
-                    list.add(rl);
-                }
-                mapList.put("list",list);
-            }
-//            map.put("1",mapList);
-            System.out.println(JSON.toJSONString(map));
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
-    }
+//    @Test
+//    public void rankCategory(){
+//        try{
+//            Map<String,Object> map=new HashMap<>();
+//
+//            Document rankCategoryUrl=Jsoup.connect("https://www.biqugexsw.com/paihangbang").get();
+//            List<Element> wrap_rank = rankCategoryUrl.getElementsByClass("wrap rank").get(0).children();
+//            List listOne=new ArrayList<>();
+//            for(Element element:wrap_rank){
+//                Elements elements=element.children();
+//                RankList rl=new RankList();
+//                Map<String,Object> mapList=new HashMap<>();
+//                List<RankList> list=new ArrayList<>();
+////                rl.setTitle(elements.get(i).select("h2").text());
+//                mapList.put("cat","1");
+//                for(int i=0;i<elements.size();i++){
+//                    rl.setTitle(elements.get(i).select("ul>li").get(i).text());
+//                    rl.setLink(elements.get(i).select("ul>li").get(i).select("a").attr("href"));
+//                    list.add(rl);
+//                }
+//                mapList.put("list",list);
+//            }
+////            map.put("1",mapList);
+//            System.out.println(JSON.toJSONString(map));
+//        }catch(Exception e){
+//            e.printStackTrace();
+//        }
+//
+//    }
 }
