@@ -87,6 +87,43 @@ public class Api {
         return new HashMap<>();
     }
 
+    /**
+     * 获取书籍详情
+     * @param bookId
+     * @return
+     */
+    @GetMapping("/bookDetail")
+    public Map bookDetail(@RequestParam("bookId") String bookId){
+        try {
+            String img="https://www.biqugexsw.com";
+            SearchBean sb=new SearchBean();
+            Document detail=Jsoup.connect("http://www.biqugexsw.com/book/goto/id/"+bookId).get();
+            sb.setTitle(detail.select("body > div.book > div.info > h2").text());
+            sb.setAuthor(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().indexOf("：")+1));
+            //解析封面
+            sb.setCover(img+detail.select("body > div.book > div.info > div.cover > img").attr("src"));
+            //解析简介
+            sb.setShortIntro(detail.select("body > div.book > div.info > div.intro").text().substring(detail.select("body > div.book > div.info > div.intro").text().indexOf("：")+1,detail.select("body > div.book > div.info > div.intro").text().indexOf("作者")));
+            //解析分类
+            sb.setCat(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().indexOf("：")+1));
+            //解析字数
+            sb.setWordTotal(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().indexOf("：")+1));
+            //解析状态
+            sb.setUpdateStatus(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().indexOf("：")+1));
+            //解析最后更新时间
+            sb.setUpdateDate(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().indexOf("：")+1));
+            //解析最新章节
+            sb.setLastChapter(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().indexOf("：")+1));
+            //解析书籍id
+            sb.setId(bookId);
+            System.out.println(JSON.toJSONString(sb));
+            return (Map<String, Object>)JSON.toJSON(sb);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new HashMap();
+    }
+
     //首先使用书籍id获取书源列表，然后选择书源获取章节列表，最后获取章节列表中的link字段url进行编码，作为link传入。
 
     //获取书籍章节列表
@@ -123,14 +160,12 @@ public class Api {
             Document chapterDetailUrl=Jsoup.connect(link).get();
             Elements elements=chapterDetailUrl.select("#content");
             Map<String,Object> map=new HashMap<>();
-            List<ChapterListDeatilBean> list=new ArrayList<>();
             ChapterListDeatilBean cldb=new ChapterListDeatilBean();
             cldb.setId("");
             cldb.setTital(elements.get(0).select("#wrapper > div.book.reader > div.content > h1").text());
             cldb.setCpContent(elements.get(0).select("#content").html().substring(0,elements.get(0).select("#content").html().indexOf("https")));
-            list.add(cldb);
             map.put("ok",true);
-            map.put("chapter",list);
+            map.put("chapter",cldb);
             System.out.println(JSON.toJSONString(map));
             return map;
         } catch (IOException e) {
@@ -159,7 +194,7 @@ public class Api {
 //                    rl.setTitle(elements.get(i).select("ul>li").get(i).text());
 //                    rl.setLink(elements.get(i).select("ul>li").get(i).select("a").attr("href"));
 //                    list.add(rl);
-//                }
+//                }++
 //                mapList.put("list",list);
 //            }
 ////            map.put("1",mapList);
