@@ -43,6 +43,17 @@ public class Api {
             "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36 TheWorld 7",
             "Mozilla/5.0 (Windows NT 6.1; W…) Gecko/20100101 Firefox/60.0"};
 
+    /**
+     * 热门关键字
+     * @return
+     */
+
+    /**
+     * 猜你喜欢
+     * @return
+     */
+
+
     @GetMapping("/search")
     public Map search(@RequestParam("keyword") String keyword) {
         try {
@@ -86,6 +97,66 @@ public class Api {
         }
         return new HashMap<>();
     }
+
+    @GetMapping("/search1")
+    public Map search1(@RequestParam("keyword") String keyword) {
+        try {
+            Random r = new Random();
+            int k = r.nextInt(14);
+            Document search  = Jsoup.connect("https://so.biqusoso.com/s.php?ie=utf-8&siteid=biqugexsw.com&q="+ keyword)
+                    .userAgent(UA[k])
+                    .get();
+            Elements elements = search.select("#search-main > div.search-list > ul>li");
+            Map<String,Object> map=new HashMap<>();
+            List<SearchBean> list =new ArrayList<>();
+            String img="https://www.biqugexsw.com/files/article/image/";
+            for(int i=1;i<elements.size();i++){
+                SearchBean sb=new SearchBean();
+                String bookId=elements.get(i).select("a").attr("href").substring(elements.get(i).select("a").attr("href").lastIndexOf("/")+1);
+//                Document detail=Jsoup.connect(elements.get(i).select("a").attr("href")).get();
+                sb.setTitle(elements.get(i).getElementsByClass("s2").text());
+                sb.setAuthor(elements.get(i).getElementsByClass("s4").text());
+                //解析封面
+                sb.setCover(img+bookId.substring(0,2)+"/"+bookId+"/"+bookId+"s.jpg");
+//                //解析简介
+//                sb.setShortIntro(detail.select("body > div.book > div.info > div.intro").text().substring(0,detail.select("body > div.book > div.info > div.intro").text().indexOf("作者")));
+//                //解析分类
+//                sb.setCat(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().indexOf("：")+1));
+//                //解析字数
+//                sb.setWordTotal(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().indexOf("：")+1));
+//                //解析状态
+//                sb.setUpdateStatus(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().indexOf("：")+1));
+//                //解析最后更新时间
+//                sb.setUpdateDate(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().indexOf("：")+1));
+//                //解析最新章节
+//                sb.setLastChapter(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().indexOf("：")+1));
+                //解析书籍id
+                sb.setId(bookId);
+                list.add(sb);
+            }
+            map.put("books",list);
+            System.out.println(JSON.toJSONString(map));
+            return map;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new HashMap<>();
+    }
+
+    /**
+     * 书籍是否更新接口
+     */
+    @GetMapping("/bookUpdate")
+    public List bookUpdate(@RequestParam("bookId") String bookId){
+        String[] ids=bookId.split(",");
+        List list=new ArrayList();
+        for(String id:ids){
+           Map map= bookDetail(id);
+           list.add(map);
+        }
+        return list;
+    }
+
 
     /**
      * 获取书籍详情
