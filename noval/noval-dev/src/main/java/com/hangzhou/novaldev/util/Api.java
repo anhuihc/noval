@@ -24,8 +24,14 @@ import com.alibaba.fastjson.JSON;
 @RestController
 @RequestMapping("api")
 public class Api {
-//    @Value("${API-BQG-SEARCH}")
-//    private String apiBqgSearch;
+    @Value("${bqg}")
+    private String BQG;
+    @Value("${bqg.search}")
+    private String BQG_SEARCH;
+    @Value("${bqg.image}")
+    private String BQG_IMAGE;
+    @Value("${bqg.bookDetail}")
+    private String BQG_BOOKDETAIL;
 
     public static final String[] UA = {"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0",
             "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36 OPR/37.0.2178.32",
@@ -53,71 +59,32 @@ public class Api {
      * @return
      */
 
+    /**
+     * 获取小说分类
+     * @param keyword
+     * @return
+     */
 
-    @GetMapping("/search")
-    public Map search(@RequestParam("keyword") String keyword) {
-        try {
-            Random r = new Random();
-            int k = r.nextInt(14);
-            Document search  = Jsoup.connect("https://so.biqusoso.com/s.php?ie=utf-8&siteid=biqugexsw.com&q="+ keyword)
-                    .userAgent(UA[k])
-                    .get();
-            Elements elements = search.select("#search-main > div.search-list > ul>li");
-            Map<String,Object> map=new HashMap<>();
-            List<SearchBean> list =new ArrayList<>();
-            String img="https://www.biqugexsw.com";
-            for(int i=1;i<(elements.size()>6?6:elements.size());i++){
-                SearchBean sb=new SearchBean();
-                Document detail=Jsoup.connect(elements.get(i).select("a").attr("href")).get();
-                sb.setTitle(elements.get(i).getElementsByClass("s2").text());
-                sb.setAuthor(elements.get(i).getElementsByClass("s4").text());
-                //解析封面
-                sb.setCover(img+detail.select("body > div.book > div.info > div.cover > img").attr("src"));
-                //解析简介
-                sb.setShortIntro(detail.select("body > div.book > div.info > div.intro").text().substring(0,detail.select("body > div.book > div.info > div.intro").text().indexOf("作者")));
-                //解析分类
-                sb.setCat(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().indexOf("：")+1));
-                //解析字数
-                sb.setWordTotal(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().indexOf("：")+1));
-                //解析状态
-                sb.setUpdateStatus(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().indexOf("：")+1));
-                //解析最后更新时间
-                sb.setUpdateDate(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().indexOf("：")+1));
-                //解析最新章节
-                sb.setLastChapter(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().indexOf("：")+1));
-                //解析书籍id
-                sb.setId(elements.get(i).select("a").attr("href").substring(elements.get(i).select("a").attr("href").lastIndexOf("/")+1));
-                list.add(sb);
-            }
-            map.put("books",list);
-            System.out.println(JSON.toJSONString(map));
-            return map;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new HashMap<>();
-    }
 
-    @GetMapping("/search1")
-    public Map search1(@RequestParam("keyword") String keyword) {
-        try {
-            Random r = new Random();
-            int k = r.nextInt(14);
-            Document search  = Jsoup.connect("https://so.biqusoso.com/s.php?ie=utf-8&siteid=biqugexsw.com&q="+ keyword)
-                    .userAgent(UA[k])
-                    .get();
-            Elements elements = search.select("#search-main > div.search-list > ul>li");
-            Map<String,Object> map=new HashMap<>();
-            List<SearchBean> list =new ArrayList<>();
-            String img="https://www.biqugexsw.com/files/article/image/";
-            for(int i=1;i<elements.size();i++){
-                SearchBean sb=new SearchBean();
-                String bookId=elements.get(i).select("a").attr("href").substring(elements.get(i).select("a").attr("href").lastIndexOf("/")+1);
+//    @GetMapping("/search")
+//    public Map search(@RequestParam("keyword") String keyword) {
+//        try {
+//            Random r = new Random();
+//            int k = r.nextInt(14);
+//            Document search  = Jsoup.connect("https://so.biqusoso.com/s.php?ie=utf-8&siteid=biqugexsw.com&q="+ keyword)
+//                    .userAgent(UA[k])
+//                    .get();
+//            Elements elements = search.select("#search-main > div.search-list > ul>li");
+//            Map<String,Object> map=new HashMap<>();
+//            List<SearchBean> list =new ArrayList<>();
+//            String img="https://www.biqugexsw.com";
+//            for(int i=1;i<(elements.size()>6?6:elements.size());i++){
+//                SearchBean sb=new SearchBean();
 //                Document detail=Jsoup.connect(elements.get(i).select("a").attr("href")).get();
-                sb.setTitle(elements.get(i).getElementsByClass("s2").text());
-                sb.setAuthor(elements.get(i).getElementsByClass("s4").text());
-                //解析封面
-                sb.setCover(img+bookId.substring(0,2)+"/"+bookId+"/"+bookId+"s.jpg");
+//                sb.setTitle(elements.get(i).getElementsByClass("s2").text());
+//                sb.setAuthor(elements.get(i).getElementsByClass("s4").text());
+//                //解析封面
+//                sb.setCover(img+detail.select("body > div.book > div.info > div.cover > img").attr("src"));
 //                //解析简介
 //                sb.setShortIntro(detail.select("body > div.book > div.info > div.intro").text().substring(0,detail.select("body > div.book > div.info > div.intro").text().indexOf("作者")));
 //                //解析分类
@@ -130,6 +97,38 @@ public class Api {
 //                sb.setUpdateDate(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().indexOf("：")+1));
 //                //解析最新章节
 //                sb.setLastChapter(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().indexOf("：")+1));
+//                //解析书籍id
+//                sb.setId(elements.get(i).select("a").attr("href").substring(elements.get(i).select("a").attr("href").lastIndexOf("/")+1));
+//                list.add(sb);
+//            }
+//            map.put("books",list);
+//            System.out.println(JSON.toJSONString(map));
+//            return map;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return new HashMap<>();
+//    }
+
+    @GetMapping("/search")
+    public Map search1(@RequestParam("keyword") String keyword) {
+        try {
+            Random r = new Random();
+            int k = r.nextInt(14);
+            Document search  = Jsoup.connect(BQG_SEARCH+ keyword)
+                    .userAgent(UA[k])
+                    .get();
+            Elements elements = search.select("#search-main > div.search-list > ul>li");
+            Map<String,Object> map=new HashMap<>();
+            List<SearchBean> list =new ArrayList<>();
+            String img=BQG_IMAGE;
+            for(int i=1;i<elements.size();i++){
+                SearchBean sb=new SearchBean();
+                String bookId=elements.get(i).select("a").attr("href").substring(elements.get(i).select("a").attr("href").lastIndexOf("/")+1);
+                sb.setTitle(elements.get(i).getElementsByClass("s2").text());
+                sb.setAuthor(elements.get(i).getElementsByClass("s4").text());
+                //解析封面
+                sb.setCover(img+bookId.substring(0,2)+"/"+bookId+"/"+bookId+"s.jpg");
                 //解析书籍id
                 sb.setId(bookId);
                 list.add(sb);
@@ -166,9 +165,9 @@ public class Api {
     @GetMapping("/bookDetail")
     public Map bookDetail(@RequestParam("bookId") String bookId){
         try {
-            String img="https://www.biqugexsw.com";
+            String img=BQG;
             SearchBean sb=new SearchBean();
-            Document detail=Jsoup.connect("http://www.biqugexsw.com/book/goto/id/"+bookId).get();
+            Document detail=Jsoup.connect(BQG_BOOKDETAIL+bookId).get();
             sb.setTitle(detail.select("body > div.book > div.info > h2").text());
             sb.setAuthor(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().indexOf("：")+1));
             //解析封面
@@ -205,7 +204,7 @@ public class Api {
             List<ChapterListBean> list = new ArrayList<>();
             map.put("_id", bookId);
             map.put("name", "笔趣阁");
-            Document listUrl = Jsoup.connect("http://www.biqugexsw.com/book/goto/id/" + bookId).get();
+            Document listUrl = Jsoup.connect(BQG_BOOKDETAIL + bookId).get();
             Elements elements = listUrl.select("body > div.listmain > dl > dt:nth-child(11)").nextAll();
             for (Element element : elements) {
                 ChapterListBean clb = new ChapterListBean();
