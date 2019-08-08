@@ -1,14 +1,17 @@
 package com.hangzhou.novaldev.util;
 
+import com.alibaba.fastjson.JSONObject;
+import com.hangzhou.novaldev.constant.RedisKey;
 import com.hangzhou.novaldev.model.ChapterListBean;
 import com.hangzhou.novaldev.model.ChapterListDeatilBean;
 import com.hangzhou.novaldev.model.RankList;
 import com.hangzhou.novaldev.model.SearchBean;
+import com.hangzhou.novaldev.service.RedisService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +35,9 @@ public class Api {
     private String BQG_IMAGE;
     @Value("${bqg.bookDetail}")
     private String BQG_BOOKDETAIL;
+
+    @Autowired
+    private RedisService redisService;
 
     public static final String[] UA = {"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0",
             "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36 OPR/37.0.2178.32",
@@ -113,29 +119,36 @@ public class Api {
     @GetMapping("/search")
     public Map search1(@RequestParam("keyword") String keyword) {
         try {
-            Random r = new Random();
-            int k = r.nextInt(14);
-            Document search  = Jsoup.connect(BQG_SEARCH+ keyword)
-                    .userAgent(UA[k])
-                    .get();
-            Elements elements = search.select("#search-main > div.search-list > ul>li");
-            Map<String,Object> map=new HashMap<>();
-            List<SearchBean> list =new ArrayList<>();
-            String img=BQG_IMAGE;
-            for(int i=1;i<elements.size();i++){
-                SearchBean sb=new SearchBean();
-                String bookId=elements.get(i).select("a").attr("href").substring(elements.get(i).select("a").attr("href").lastIndexOf("/")+1);
-                sb.setTitle(elements.get(i).getElementsByClass("s2").text());
-                sb.setAuthor(elements.get(i).getElementsByClass("s4").text());
-                //解析封面
-                sb.setCover(img+bookId.substring(0,2)+"/"+bookId+"/"+bookId+"s.jpg");
-                //解析书籍id
-                sb.setId(bookId);
-                list.add(sb);
+            String searchJson=redisService.get(RedisKey.BQGSEARCH+"-"+keyword);
+            if(searchJson!=null){
+                return JSONObject.parseObject(searchJson);
+            }else{
+                Random r = new Random();
+                int k = r.nextInt(14);
+                Document search  = Jsoup.connect(BQG_SEARCH+ keyword)
+                        .userAgent(UA[k])
+                        .get();
+                Elements elements = search.select("#search-main > div.search-list > ul>li");
+                Map<String,Object> map=new HashMap<>();
+                List<SearchBean> list =new ArrayList<>();
+                String img=BQG_IMAGE;
+                for(int i=1;i<elements.size();i++){
+                    SearchBean sb=new SearchBean();
+                    String bookId=elements.get(i).select("a").attr("href").substring(elements.get(i).select("a").attr("href").lastIndexOf("/")+1);
+                    sb.setTitle(elements.get(i).getElementsByClass("s2").text());
+                    sb.setAuthor(elements.get(i).getElementsByClass("s4").text());
+                    //解析封面
+                    sb.setCover(img+bookId.substring(0,2)+"/"+bookId+"/"+bookId+"s.jpg");
+                    //解析书籍id
+                    sb.setId(bookId);
+                    list.add(sb);
+                }
+                map.put("books",list);
+                redisService.set(RedisKey.BQGSEARCH+"-"+keyword,JSON.toJSONString(map));
+                redisService.expire(RedisKey.BQGSEARCH+"-"+keyword,24*60*60);
+                System.out.println(JSON.toJSONString(map));
+                return map;
             }
-            map.put("books",list);
-            System.out.println(JSON.toJSONString(map));
-            return map;
         } catch (IOException e) {
             e.printStackTrace();
         }
