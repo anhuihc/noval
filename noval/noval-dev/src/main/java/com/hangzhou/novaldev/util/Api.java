@@ -132,14 +132,17 @@ public class Api {
 			Random r = new Random();
 			int k = r.nextInt(14);
 			JSONArray jsonArray=JSON.parseArray(TEST);
-			for(int i=0;i<jsonArray.size();i++){
+			for (Object aJsonArray : jsonArray) {
 				try {
-					search = Jsoup.connect(((JSONObject) jsonArray.get(i)).get("search") + keyword)
+					search = Jsoup.connect(((JSONObject) aJsonArray).get("search") + keyword)
 							.userAgent(UA[k]).timeout(5000)
 							.get();
 				} catch (Exception e) {
-					continue;
+					System.out.println("[笔趣阁]-搜索失败-切换源");
 				}
+			}
+			if(search==null){
+				return new HashMap();
 			}
 			Elements elements = search.select("#search-main > div.search-list > ul>li");
 			Map<String, Object> map = new HashMap<>();
