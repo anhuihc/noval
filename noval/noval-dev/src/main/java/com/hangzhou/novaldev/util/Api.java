@@ -61,9 +61,74 @@ public class Api {
 
     /**
      * 获取小说分类
-     * @param keyword
      * @return
      */
+
+    /**
+     * 获取书城首页
+     * @return
+     */
+    @GetMapping("/bookStoreMain")
+    public Map bookStoreMain() {
+        Map<String,Object> map=new HashMap<String,Object>();
+        try{
+
+            Random r = new Random();
+            int k = r.nextInt(14);
+            Document main  = Jsoup.connect(BQG)
+                    .userAgent(UA[k])
+                    .get();
+            //获取banner
+            Elements banners = main.select("body > div.wrap > div.hot > div.l.bd").get(0).children();
+            Map<String,Object> temp=new HashMap<String,Object>();
+            List<Map<String,Object>> list=new ArrayList<>();
+            for(Element banner:banners){
+                temp.clear();
+                //获取图片
+                temp.put("cover",BQG+banner.select("img").attr("src"));
+                //获取小说名
+                temp.put("title",banner.select("dt>a").text());
+                //获取作者
+                temp.put("author",banner.select("dt>a").text());
+                //获取简介
+                temp.put("shortIntro",banner.select("dd").text());
+                //获取小说id
+                temp.put("id",banner.select("dt>a").attr("href"));
+                list.add(temp);
+            }
+            map.put("banner",list);
+            //获取推荐
+            Elements recommend = main.select("body > div.wrap > div.hot > div.r.bd > ul").get(0).children();
+            for(Element banner:banners){
+                temp.clear();
+                list.clear();
+                //获取图片
+                temp.put("cover",BQG+banner.select("img").attr("src"));
+                //获取小说名
+                temp.put("title",banner.select("dt>a").text());
+                //获取作者
+                temp.put("author",banner.select("dt>a").text());
+                //获取简介
+                temp.put("shortIntro",banner.select("dd").text());
+                //获取小说id
+                temp.put("id",banner.select("dt>a").attr("href"));
+                list.add(temp);
+            }
+            map.put("recommend",list);
+            //获取玄幻小说
+            //获取修真小说
+            //获取都市小说
+            //获取穿越小说
+            //获取网游小说
+            //获取科幻小说
+            //获取最近更新小说
+            //获取最新入库小说
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return map;
+    }
 
 
 //    @GetMapping("/search")
