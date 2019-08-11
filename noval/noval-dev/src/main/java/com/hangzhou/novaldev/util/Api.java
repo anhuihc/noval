@@ -131,7 +131,7 @@ public class Api {
                 //获取简介
                 temp.put("shortIntro","");
                 //获取小说id
-				temp.put("id",bookId);
+				temp.put("id",bookId.split("_")[1]);
                 list1.add(temp);
             }
             map.put("recommend",list1);
@@ -151,7 +151,7 @@ public class Api {
 				//获取简介
 				temp.put("shortIntro",classify.select("dd").text());
 				//获取小说id
-				temp.put("id",bookId);
+				temp.put("id",bookId.split("_")[1]);
 				Elements subclasss = classify.select("ul").get(0).children();
 				List<Map<String,Object>> list4=new ArrayList<>();
 				for(Element subclass:subclasss){
@@ -167,7 +167,7 @@ public class Api {
 					//获取简介
 					temp1.put("shortIntro","");
 					//获取小说id
-					temp1.put("id",bookId1);
+					temp1.put("id",bookId1.split("_")[1]);
 					list4.add(temp1);
 				}
 				temp.put("dataList",list4);
