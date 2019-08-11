@@ -1,14 +1,18 @@
 package com.hangzhou.novaldev.util;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.hangzhou.novaldev.constant.RedisKey;
 import com.hangzhou.novaldev.model.ChapterListBean;
 import com.hangzhou.novaldev.model.ChapterListDeatilBean;
 import com.hangzhou.novaldev.model.RankList;
 import com.hangzhou.novaldev.model.SearchBean;
+import com.hangzhou.novaldev.service.RedisService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -93,10 +97,10 @@ public class Api {
                     .get();
             //获取banner
             Elements banners = main.select("body > div.wrap > div.hot > div.l.bd").get(0).children();
-            Map<String,Object> temp=new HashMap<String,Object>();
+
             List<Map<String,Object>> list=new ArrayList<>();
             for(Element banner:banners){
-                temp.clear();
+				Map<String,Object> temp=new HashMap<String,Object>();
                 //获取图片
                 temp.put("cover",BQG+banner.select("img").attr("src"));
                 //获取小说名
@@ -111,23 +115,66 @@ public class Api {
             }
             map.put("banner",list);
             //获取推荐
-            Elements recommend = main.select("body > div.wrap > div.hot > div.r.bd > ul").get(0).children();
-            for(Element banner:banners){
-                temp.clear();
-                list.clear();
+			List<Map<String,Object>> list1=new ArrayList<>();
+			String img = BQG_IMAGE;
+            Elements recommends = main.select("body > div.wrap > div.hot > div.r.bd > ul").get(0).children();
+            for(Element recommend:recommends){
+				Map<String,Object> temp=new HashMap<String,Object>();
                 //获取图片
-                temp.put("cover",BQG+banner.select("img").attr("src"));
+				String bookId=recommend.select("li>span>a").attr("href").replaceAll("/","");
+				temp.put("cover",img + bookId.split("_")[0] + "/" + bookId.split("_")[1]  + "/" + bookId.split("_")[1]  + "s.jpg");
+				//获取小说分类
                 //获取小说名
-                temp.put("title",banner.select("dt>a").text());
+				temp.put("title",recommend.select("li>span").get(1).text());
                 //获取作者
-                temp.put("author",banner.select("dt>a").text());
+				temp.put("author",recommend.select("li>span").get(2).text());
                 //获取简介
-                temp.put("shortIntro",banner.select("dd").text());
+                temp.put("shortIntro","");
                 //获取小说id
-                temp.put("id",banner.select("dt>a").attr("href"));
-                list.add(temp);
+				temp.put("id",bookId);
+                list1.add(temp);
             }
-            map.put("recommend",list);
+            map.put("recommend",list1);
+			List list2=new ArrayList();
+			Elements classifys1 = main.select("body > div.wrap > div:nth-child(2)").get(0).children();
+			for(Element classify:classifys1){
+				List<Map<String,Object>> list3=new ArrayList<>();
+				Map<String,Object> temp=new HashMap<String,Object>();
+				//获取图片
+				String bookId=classify.select("div>a").attr("href").replaceAll("/","");
+				temp.put("cover",img + bookId.split("_")[0]  + "/" +bookId.split("_")[1]  + "/" + bookId.split("_")[1]  + "s.jpg");
+				temp.put("classify",classify.select("h2").text());
+				//获取小说名
+				temp.put("title",classify.select("dt>a").text());
+				//获取作者
+				temp.put("author","");
+				//获取简介
+				temp.put("shortIntro",classify.select("dd").text());
+				//获取小说id
+				temp.put("id",bookId);
+				Elements subclasss = classify.select("ul").get(0).children();
+				List<Map<String,Object>> list4=new ArrayList<>();
+				for(Element subclass:subclasss){
+					Map<String,Object> temp1=new HashMap<String,Object>();
+					//获取图片
+					String bookId1=subclass.select("li>a").attr("href").replaceAll("/","");
+					temp1.put("cover",img + bookId1.split("_")[0]  + "/" + bookId1.split("_")[1]  + "/" + bookId1.split("_")[1] + "s.jpg");
+					temp1.put("classify",classify.select("h2").text());
+					//获取小说名
+					temp1.put("title",subclass.select("li>a").attr("title"));
+					//获取作者
+					temp1.put("author",subclass.select("li").text().split("/")[1]);
+					//获取简介
+					temp1.put("shortIntro","");
+					//获取小说id
+					temp1.put("id",bookId1);
+					list4.add(temp1);
+				}
+				temp.put("dataList",list4);
+//				list3.add(temp);
+				list2.add(temp);
+			}
+			map.put("classify",list2);
             //获取玄幻小说
             //获取修真小说
             //获取都市小说

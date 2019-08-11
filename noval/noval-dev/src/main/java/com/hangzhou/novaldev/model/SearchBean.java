@@ -15,6 +15,8 @@ public class SearchBean {
     private String updateDate;
     private String updateStatus;
 
+
+
     public SearchBean() {
     }
 }
