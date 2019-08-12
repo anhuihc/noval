@@ -139,7 +139,44 @@ public class Api {
 				map.put("recommend",list1);
 				List list2=new ArrayList();
 				Elements classifys1 = main.select("body > div.wrap > div:nth-child(2)").get(0).children();
+				Elements classifys2 = main.select("body > div.wrap > div:nth-child(3)").get(0).children();
 				for(Element classify:classifys1){
+					List<Map<String,Object>> list3=new ArrayList<>();
+					Map<String,Object> temp=new HashMap<String,Object>();
+					//获取图片
+					String bookId=classify.select("div>a").attr("href").replaceAll("/","");
+					temp.put("cover",img + bookId.split("_")[0]  + "/" +bookId.split("_")[1]  + "/" + bookId.split("_")[1]  + "s.jpg");
+					temp.put("classify",classify.select("h2").text());
+					//获取小说名
+					temp.put("title",classify.select("dt>a").text());
+					//获取作者
+					temp.put("author","");
+					//获取简介
+					temp.put("shortIntro",classify.select("dd").text());
+					//获取小说id
+					temp.put("id",bookId.split("_")[1]);
+					Elements subclasss = classify.select("ul").get(0).children();
+					List<Map<String,Object>> list4=new ArrayList<>();
+					for(Element subclass:subclasss){
+						Map<String,Object> temp1=new HashMap<String,Object>();
+						//获取图片
+						String bookId1=subclass.select("li>a").attr("href").replaceAll("/","");
+						temp1.put("cover",img + bookId1.split("_")[0]  + "/" + bookId1.split("_")[1]  + "/" + bookId1.split("_")[1] + "s.jpg");
+						temp1.put("classify",classify.select("h2").text());
+						//获取小说名
+						temp1.put("title",subclass.select("li>a").attr("title"));
+						//获取作者
+						temp1.put("author",subclass.select("li").text().split("/")[1]);
+						//获取简介
+						temp1.put("shortIntro","");
+						//获取小说id
+						temp1.put("id",bookId1.split("_")[1]);
+						list4.add(temp1);
+					}
+					temp.put("dataList",list4);
+					list2.add(temp);
+				}
+				for(Element classify:classifys2){
 					List<Map<String,Object>> list3=new ArrayList<>();
 					Map<String,Object> temp=new HashMap<String,Object>();
 					//获取图片
@@ -334,7 +371,7 @@ public class Api {
 				sb.setId(bookId);
 				System.out.println(JSON.toJSONString(sb));
 				redisService.set(RedisKey.BQGBOOKDETAIL + "-" + bookId, JSON.toJSONString((Map<String, Object>) JSON.toJSON(sb)));
-				redisService.expire(RedisKey.BQGBOOKDETAIL + "-" + bookId, 24 * 60 * 60);
+				redisService.expire(RedisKey.BQGBOOKDETAIL + "-" + bookId, 60 * 5);
 				return (Map<String, Object>) JSON.toJSON(sb);
 			}
 		} catch (Exception e) {
@@ -349,22 +386,29 @@ public class Api {
 	@GetMapping("/chapterList")
 	public Map chapterList(@RequestParam("bookId") String bookId) {
 		try {
-			Map<String, Object> map = new HashMap<>();
-			List<ChapterListBean> list = new ArrayList<>();
-			map.put("_id", bookId);
-			map.put("name", "笔趣阁");
-			Document listUrl = Jsoup.connect(BQG_BOOKDETAIL + bookId).get();
-			Elements elements = listUrl.select("body > div.listmain > dl > dt:nth-child(11)").nextAll();
-			for (Element element : elements) {
-				ChapterListBean clb = new ChapterListBean();
-				clb.setTitle(element.text());
-				clb.setLink("http://www.biqugexsw.com" + element.select("a").attr("href"));
-				clb.setId(bookId);
-				list.add(clb);
+			String chapterListJson = redisService.get(RedisKey.BQGCHAPTERLIST + "-" + bookId);
+			if (chapterListJson != null) {
+				return JSONObject.parseObject(chapterListJson);
+			} else {
+				Map<String, Object> map = new HashMap<>();
+				List<ChapterListBean> list = new ArrayList<>();
+				map.put("_id", bookId);
+				map.put("name", "笔趣阁");
+				Document listUrl = Jsoup.connect(BQG_BOOKDETAIL + bookId).get();
+				Elements elements = listUrl.select("body > div.listmain > dl > dt:nth-child(11)").nextAll();
+				for (Element element : elements) {
+					ChapterListBean clb = new ChapterListBean();
+					clb.setTitle(element.text());
+					clb.setLink("http://www.biqugexsw.com" + element.select("a").attr("href"));
+					clb.setId(bookId);
+					list.add(clb);
+				}
+				map.put("chapters", list);
+				System.out.println(JSON.toJSONString(map));
+				redisService.set(RedisKey.BQGCHAPTERLIST + "-" + bookId, JSON.toJSONString(map));
+				redisService.expire(RedisKey.BQGCHAPTERLIST + "-" + bookId, 60 * 5);
+				return map;
 			}
-			map.put("chapters", list);
-			System.out.println(JSON.toJSONString(map));
-			return map;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

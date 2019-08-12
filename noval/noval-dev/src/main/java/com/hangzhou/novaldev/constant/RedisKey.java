@@ -6,4 +6,5 @@ public class RedisKey {
     public static String BQGMAIN = "bqg-main";
     public static String BQGBOOKDETAIL = "bqg-bookDetail";
     public static String BQGCHAPTERDETAIL = "bqg-chapterDetail";
+    public static String BQGCHAPTERLIST = "bqg-chapterList";
 }
