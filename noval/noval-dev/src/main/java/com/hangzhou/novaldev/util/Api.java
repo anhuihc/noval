@@ -89,104 +89,107 @@ public class Api {
     public Map bookStoreMain() {
         Map<String,Object> map=new HashMap<String,Object>();
         try{
-
-            Random r = new Random();
-            int k = r.nextInt(14);
-            Document main  = Jsoup.connect(BQG)
-                    .userAgent(UA[k])
-                    .get();
-            //获取banner
-            Elements banners = main.select("body > div.wrap > div.hot > div.l.bd").get(0).children();
-
-            List<Map<String,Object>> list=new ArrayList<>();
-            for(Element banner:banners){
-				Map<String,Object> temp=new HashMap<String,Object>();
-                //获取图片
-                temp.put("cover",BQG+banner.select("img").attr("src"));
-                //获取小说名
-                temp.put("title",banner.select("dt>a").text());
-                //获取作者
-                temp.put("author",banner.select("dt>a").text());
-                //获取简介
-                temp.put("shortIntro",banner.select("dd").text());
-                //获取小说id
-                temp.put("id",banner.select("dt>a").attr("href"));
-                list.add(temp);
-            }
-            map.put("banner",list);
-            //获取推荐
-			List<Map<String,Object>> list1=new ArrayList<>();
-			String img = BQG_IMAGE;
-            Elements recommends = main.select("body > div.wrap > div.hot > div.r.bd > ul").get(0).children();
-            for(Element recommend:recommends){
-				Map<String,Object> temp=new HashMap<String,Object>();
-                //获取图片
-				String bookId=recommend.select("li>span>a").attr("href").replaceAll("/","");
-				temp.put("cover",img + bookId.split("_")[0] + "/" + bookId.split("_")[1]  + "/" + bookId.split("_")[1]  + "s.jpg");
-				//获取小说分类
-                //获取小说名
-				temp.put("title",recommend.select("li>span").get(1).text());
-                //获取作者
-				temp.put("author",recommend.select("li>span").get(2).text());
-                //获取简介
-                temp.put("shortIntro","");
-                //获取小说id
-				temp.put("id",bookId.split("_")[1]);
-                list1.add(temp);
-            }
-            map.put("recommend",list1);
-			List list2=new ArrayList();
-			Elements classifys1 = main.select("body > div.wrap > div:nth-child(2)").get(0).children();
-			for(Element classify:classifys1){
-				List<Map<String,Object>> list3=new ArrayList<>();
-				Map<String,Object> temp=new HashMap<String,Object>();
-				//获取图片
-				String bookId=classify.select("div>a").attr("href").replaceAll("/","");
-				temp.put("cover",img + bookId.split("_")[0]  + "/" +bookId.split("_")[1]  + "/" + bookId.split("_")[1]  + "s.jpg");
-				temp.put("classify",classify.select("h2").text());
-				//获取小说名
-				temp.put("title",classify.select("dt>a").text());
-				//获取作者
-				temp.put("author","");
-				//获取简介
-				temp.put("shortIntro",classify.select("dd").text());
-				//获取小说id
-				temp.put("id",bookId.split("_")[1]);
-				Elements subclasss = classify.select("ul").get(0).children();
-				List<Map<String,Object>> list4=new ArrayList<>();
-				for(Element subclass:subclasss){
-					Map<String,Object> temp1=new HashMap<String,Object>();
+			String mainJson = redisService.get(RedisKey.BQGMAIN);
+			if (mainJson != null) {
+				return JSONObject.parseObject(mainJson);
+			} else {
+				Random r = new Random();
+				int k = r.nextInt(14);
+				Document main  = Jsoup.connect(BQG)
+						.userAgent(UA[k])
+						.get();
+				//获取banner
+				Elements banners = main.select("body > div.wrap > div.hot > div.l.bd").get(0).children();
+				List<Map<String,Object>> list=new ArrayList<>();
+				for(Element banner:banners){
+					Map<String,Object> temp=new HashMap<String,Object>();
 					//获取图片
-					String bookId1=subclass.select("li>a").attr("href").replaceAll("/","");
-					temp1.put("cover",img + bookId1.split("_")[0]  + "/" + bookId1.split("_")[1]  + "/" + bookId1.split("_")[1] + "s.jpg");
-					temp1.put("classify",classify.select("h2").text());
+					temp.put("cover",BQG+banner.select("img").attr("src"));
 					//获取小说名
-					temp1.put("title",subclass.select("li>a").attr("title"));
+					temp.put("title",banner.select("dt>a").text());
 					//获取作者
-					temp1.put("author",subclass.select("li").text().split("/")[1]);
+					temp.put("author",banner.select("dt>a").text());
 					//获取简介
-					temp1.put("shortIntro","");
+					temp.put("shortIntro",banner.select("dd").text());
 					//获取小说id
-					temp1.put("id",bookId1.split("_")[1]);
-					list4.add(temp1);
+					temp.put("id",banner.select("dt>a").attr("href"));
+					list.add(temp);
 				}
-				temp.put("dataList",list4);
-//				list3.add(temp);
-				list2.add(temp);
+				map.put("banner",list);
+				//获取推荐
+				List<Map<String,Object>> list1=new ArrayList<>();
+				String img = BQG_IMAGE;
+				Elements recommends = main.select("body > div.wrap > div.hot > div.r.bd > ul").get(0).children();
+				for(Element recommend:recommends){
+					Map<String,Object> temp=new HashMap<String,Object>();
+					//获取图片
+					String bookId=recommend.select("li>span>a").attr("href").replaceAll("/","");
+					temp.put("cover",img + bookId.split("_")[0] + "/" + bookId.split("_")[1]  + "/" + bookId.split("_")[1]  + "s.jpg");
+					//获取小说分类
+					//获取小说名
+					temp.put("title",recommend.select("li>span").get(1).text());
+					//获取作者
+					temp.put("author",recommend.select("li>span").get(2).text());
+					//获取简介
+					temp.put("shortIntro","");
+					//获取小说id
+					temp.put("id",bookId.split("_")[1]);
+					list1.add(temp);
+				}
+				map.put("recommend",list1);
+				List list2=new ArrayList();
+				Elements classifys1 = main.select("body > div.wrap > div:nth-child(2)").get(0).children();
+				for(Element classify:classifys1){
+					List<Map<String,Object>> list3=new ArrayList<>();
+					Map<String,Object> temp=new HashMap<String,Object>();
+					//获取图片
+					String bookId=classify.select("div>a").attr("href").replaceAll("/","");
+					temp.put("cover",img + bookId.split("_")[0]  + "/" +bookId.split("_")[1]  + "/" + bookId.split("_")[1]  + "s.jpg");
+					temp.put("classify",classify.select("h2").text());
+					//获取小说名
+					temp.put("title",classify.select("dt>a").text());
+					//获取作者
+					temp.put("author","");
+					//获取简介
+					temp.put("shortIntro",classify.select("dd").text());
+					//获取小说id
+					temp.put("id",bookId.split("_")[1]);
+					Elements subclasss = classify.select("ul").get(0).children();
+					List<Map<String,Object>> list4=new ArrayList<>();
+					for(Element subclass:subclasss){
+						Map<String,Object> temp1=new HashMap<String,Object>();
+						//获取图片
+						String bookId1=subclass.select("li>a").attr("href").replaceAll("/","");
+						temp1.put("cover",img + bookId1.split("_")[0]  + "/" + bookId1.split("_")[1]  + "/" + bookId1.split("_")[1] + "s.jpg");
+						temp1.put("classify",classify.select("h2").text());
+						//获取小说名
+						temp1.put("title",subclass.select("li>a").attr("title"));
+						//获取作者
+						temp1.put("author",subclass.select("li").text().split("/")[1]);
+						//获取简介
+						temp1.put("shortIntro","");
+						//获取小说id
+						temp1.put("id",bookId1.split("_")[1]);
+						list4.add(temp1);
+					}
+					temp.put("dataList",list4);
+					list2.add(temp);
+				}
+				map.put("classify",list2);
+				//获取玄幻小说
+				//获取修真小说
+				//获取都市小说
+				//获取穿越小说
+				//获取网游小说
+				//获取科幻小说
+				//获取最近更新小说
+				//获取最新入库小说
+				redisService.set(RedisKey.BQGMAIN, JSON.toJSONString(map));
+				redisService.expire(RedisKey.BQGMAIN, 24 * 60 * 60);
 			}
-			map.put("classify",list2);
-            //获取玄幻小说
-            //获取修真小说
-            //获取都市小说
-            //获取穿越小说
-            //获取网游小说
-            //获取科幻小说
-            //获取最近更新小说
-            //获取最新入库小说
         }catch (Exception e){
             e.printStackTrace();
         }
-
         return map;
     }
 
@@ -304,29 +307,36 @@ public class Api {
 	@GetMapping("/bookDetail")
 	public Map bookDetail(@RequestParam("bookId") String bookId) {
 		try {
-			String img = BQG;
-			SearchBean sb = new SearchBean();
-			Document detail = Jsoup.connect(BQG_BOOKDETAIL + bookId).get();
-			sb.setTitle(detail.select("body > div.book > div.info > h2").text());
-			sb.setAuthor(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().indexOf("：") + 1));
-			//解析封面
-			sb.setCover(img + detail.select("body > div.book > div.info > div.cover > img").attr("src"));
-			//解析简介
-			sb.setShortIntro(detail.select("body > div.book > div.info > div.intro").text().substring(detail.select("body > div.book > div.info > div.intro").text().indexOf("：") + 1, detail.select("body > div.book > div.info > div.intro").text().indexOf("作者")));
-			//解析分类
-			sb.setCat(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().indexOf("：") + 1));
-			//解析字数
-			sb.setWordTotal(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().indexOf("：") + 1));
-			//解析状态
-			sb.setUpdateStatus(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().indexOf("：") + 1));
-			//解析最后更新时间
-			sb.setUpdateDate(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().indexOf("：") + 1));
-			//解析最新章节
-			sb.setLastChapter(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().indexOf("：") + 1));
-			//解析书籍id
-			sb.setId(bookId);
-			System.out.println(JSON.toJSONString(sb));
-			return (Map<String, Object>) JSON.toJSON(sb);
+			String detailJson = redisService.get(RedisKey.BQGBOOKDETAIL + "-" + bookId);
+			if (detailJson != null) {
+				return JSONObject.parseObject(detailJson);
+			} else {
+				String img = BQG;
+				SearchBean sb = new SearchBean();
+				Document detail = Jsoup.connect(BQG_BOOKDETAIL + bookId).get();
+				sb.setTitle(detail.select("body > div.book > div.info > h2").text());
+				sb.setAuthor(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(1)").text().indexOf("：") + 1));
+				//解析封面
+				sb.setCover(img + detail.select("body > div.book > div.info > div.cover > img").attr("src"));
+				//解析简介
+				sb.setShortIntro(detail.select("body > div.book > div.info > div.intro").text().substring(detail.select("body > div.book > div.info > div.intro").text().indexOf("：") + 1, detail.select("body > div.book > div.info > div.intro").text().indexOf("作者")));
+				//解析分类
+				sb.setCat(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(2)").text().indexOf("：") + 1));
+				//解析字数
+				sb.setWordTotal(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(4)").text().indexOf("：") + 1));
+				//解析状态
+				sb.setUpdateStatus(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(3)").text().indexOf("：") + 1));
+				//解析最后更新时间
+				sb.setUpdateDate(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(5)").text().indexOf("：") + 1));
+				//解析最新章节
+				sb.setLastChapter(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().substring(detail.select("body > div.book > div.info > div.small > span:nth-child(6)").text().indexOf("：") + 1));
+				//解析书籍id
+				sb.setId(bookId);
+				System.out.println(JSON.toJSONString(sb));
+				redisService.set(RedisKey.BQGBOOKDETAIL + "-" + bookId, JSON.toJSONString((Map<String, Object>) JSON.toJSON(sb)));
+				redisService.expire(RedisKey.BQGBOOKDETAIL + "-" + bookId, 24 * 60 * 60);
+				return (Map<String, Object>) JSON.toJSON(sb);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -366,17 +376,24 @@ public class Api {
 	@GetMapping("/chapterDetail")
 	public Map chapterDetail(@RequestParam("link") String link) {
 		try {
-			Document chapterDetailUrl = Jsoup.connect(link).get();
-			Elements elements = chapterDetailUrl.select("#content");
-			Map<String, Object> map = new HashMap<>();
-			ChapterListDeatilBean cldb = new ChapterListDeatilBean();
-			cldb.setId("");
-			cldb.setTital(elements.get(0).select("#wrapper > div.book.reader > div.content > h1").text());
-			cldb.setCpContent(elements.get(0).select("#content").html().substring(0, elements.get(0).select("#content").html().indexOf("https")));
-			map.put("ok", true);
-			map.put("chapter", cldb);
-			System.out.println(JSON.toJSONString(map));
-			return map;
+			String detailJson = redisService.get(RedisKey.BQGCHAPTERDETAIL + "-" + link);
+			if (detailJson != null) {
+				return JSONObject.parseObject(detailJson);
+			} else {
+				Document chapterDetailUrl = Jsoup.connect(link).get();
+				Elements elements = chapterDetailUrl.select("#content");
+				Map<String, Object> map = new HashMap<>();
+				ChapterListDeatilBean cldb = new ChapterListDeatilBean();
+				cldb.setId("");
+				cldb.setTital(elements.get(0).select("#wrapper > div.book.reader > div.content > h1").text());
+				cldb.setCpContent(elements.get(0).select("#content").html().substring(0, elements.get(0).select("#content").html().indexOf("https")));
+				map.put("ok", true);
+				map.put("chapter", cldb);
+				System.out.println(JSON.toJSONString(map));
+				redisService.set(RedisKey.BQGCHAPTERDETAIL + "-" + link, JSON.toJSONString(map));
+				redisService.expire(RedisKey.BQGCHAPTERDETAIL + "-" + link, 24 * 60 * 60);
+				return map;
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
